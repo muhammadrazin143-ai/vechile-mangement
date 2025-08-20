@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import type { Vehicle, SearchResult, VehicleStatus, Expense } from './types';
-import { INITIAL_VEHICLES, INITIAL_EXPENSES } from './constants';
+import { useVehicles } from './hooks/useVehicles';
+import { useExpenses } from './hooks/useExpenses';
 
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -12,6 +13,8 @@ import Expenses from './components/Expenses';
 import Services from './components/Services';
 import Settings from './components/Settings';
 import Inventory from './components/Inventory';
+import LoadingSpinner from './components/LoadingSpinner';
+import ErrorMessage from './components/ErrorMessage';
 
 const statusColors: { [key in VehicleStatus]: string } = {
     Available: 'bg-brand-100 text-brand-700',
@@ -55,34 +58,23 @@ const SearchResultsDisplay: React.FC<{ results: SearchResult[] }> = ({ results }
 
 export default function App() {
     const [isSidebarOpen, setSidebarOpen] = useState(false);
-    const [vehicles, setVehicles] = useState<Vehicle[]>(INITIAL_VEHICLES);
-    const [expenses, setExpenses] = useState<Expense[]>(INITIAL_EXPENSES);
     const [globalSearchTerm, setGlobalSearchTerm] = useState('');
 
-    const handleAddVehicle = (vehicle: Omit<Vehicle, 'id' | 'status'>) => {
-        const newVehicle: Vehicle = { 
-            ...vehicle, 
-            id: `v${Date.now()}`, 
-            status: 'Available' 
-        };
-        setVehicles(prev => [newVehicle, ...prev]);
-    };
+    const { vehicles, loading: vehiclesLoading, error: vehiclesError, addVehicle, updateVehicle } = useVehicles();
+    const { expenses, loading: expensesLoading, error: expensesError, addExpense, updateExpense } = useExpenses();
 
-    const handleUpdateVehicle = (updatedVehicle: Vehicle) => {
-        setVehicles(prev => prev.map(v => v.id === updatedVehicle.id ? updatedVehicle : v));
-    };
+    const loading = vehiclesLoading || expensesLoading;
+    const error = vehiclesError || expensesError;
 
-    const handleAddExpense = (expense: Omit<Expense, 'id'>) => {
-        const newExpense: Expense = {
-            ...expense,
-            id: `e${Date.now()}`
-        };
-        setExpenses(prev => [newExpense, ...prev]);
-    };
-    
-    const handleUpdateExpense = (updatedExpense: Expense) => {
-        setExpenses(prev => prev.map(e => e.id === updatedExpense.id ? updatedExpense : e));
-    };
+    // Show loading spinner while data is being fetched
+    if (loading) {
+        return <LoadingSpinner />;
+    }
+
+    // Show error message if there's an error
+    if (error) {
+        return <ErrorMessage message={error} />;
+    }
 
     const searchResults = useMemo<SearchResult[]>(() => {
         if (!globalSearchTerm.trim()) return [];
@@ -114,10 +106,10 @@ export default function App() {
                            <Routes>
                                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                                 <Route path="/dashboard" element={<Dashboard vehicles={vehicles} expenses={expenses} />} />
-                                <Route path="/inventory" element={<Inventory vehicles={vehicles} expenses={expenses} onUpdateVehicle={handleUpdateVehicle} />} />
+                                <Route path="/inventory" element={<Inventory vehicles={vehicles} expenses={expenses} onUpdateVehicle={updateVehicle} />} />
                                 <Route path="/sales" element={<Sales vehicles={vehicles.filter(v => v.status === 'Sold')} expenses={expenses} />} />
-                                <Route path="/purchases" element={<Purchases onAddVehicle={handleAddVehicle} />} />
-                                <Route path="/expenses" element={<Expenses vehicles={vehicles} expenses={expenses} onAddExpense={handleAddExpense} onUpdateExpense={handleUpdateExpense} />} />
+                                <Route path="/purchases" element={<Purchases onAddVehicle={addVehicle} />} />
+                                <Route path="/expenses" element={<Expenses vehicles={vehicles} expenses={expenses} onAddExpense={addExpense} onUpdateExpense={updateExpense} />} />
                                 <Route path="/services" element={<Services />} />
                                 <Route path="/settings" element={<Settings />} />
                             </Routes>
