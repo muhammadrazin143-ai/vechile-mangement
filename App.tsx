@@ -3,6 +3,8 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import type { Vehicle, SearchResult, VehicleStatus, Expense } from './types';
 import { useVehicles } from './hooks/useVehicles';
 import { useExpenses } from './hooks/useExpenses';
+import { useVehicles } from './hooks/useVehicles';
+import { useExpenses } from './hooks/useExpenses';
 
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -13,6 +15,8 @@ import Expenses from './components/Expenses';
 import Services from './components/Services';
 import Settings from './components/Settings';
 import Inventory from './components/Inventory';
+import LoadingSpinner from './components/LoadingSpinner';
+import ErrorMessage from './components/ErrorMessage';
 import LoadingSpinner from './components/LoadingSpinner';
 import ErrorMessage from './components/ErrorMessage';
 
@@ -66,6 +70,18 @@ export default function App() {
     const loading = vehiclesLoading || expensesLoading;
     const error = vehiclesError || expensesError;
 
+    const { vehicles, loading: vehiclesLoading, error: vehiclesError, addVehicle, updateVehicle } = useVehicles();
+    const { expenses, loading: expensesLoading, error: expensesError, addExpense, updateExpense } = useExpenses();
+
+    const loading = vehiclesLoading || expensesLoading;
+    const error = vehiclesError || expensesError;
+
+    // Show loading spinner while data is being fetched
+    if (loading) {
+        return <LoadingSpinner />;
+    }
+
+    // Show error message if there's an error
     // Show loading spinner while data is being fetched
     if (loading) {
         return <LoadingSpinner />;
