@@ -70,18 +70,6 @@ export default function App() {
     const loading = vehiclesLoading || expensesLoading;
     const error = vehiclesError || expensesError;
 
-    const { vehicles, loading: vehiclesLoading, error: vehiclesError, addVehicle, updateVehicle } = useVehicles();
-    const { expenses, loading: expensesLoading, error: expensesError, addExpense, updateExpense } = useExpenses();
-
-    const loading = vehiclesLoading || expensesLoading;
-    const error = vehiclesError || expensesError;
-
-    // Show loading spinner while data is being fetched
-    if (loading) {
-        return <LoadingSpinner />;
-    }
-
-    // Show error message if there's an error
     // Show loading spinner while data is being fetched
     if (loading) {
         return <LoadingSpinner />;
